@@ -1,0 +1,6 @@
+aiogram==3.4.0
+environs
+psycopg2
+psycopg2-binary
+asyncpg
+requests
