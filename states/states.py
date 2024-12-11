@@ -14,7 +14,8 @@ class VideoAdvertising(StatesGroup):
     check = State()
 
 class AddChannelState(StatesGroup):
-    channnel_id = State()
+    channel_id = State()
+    invite_link = State()
     check = State()
 
 class Comment(StatesGroup):

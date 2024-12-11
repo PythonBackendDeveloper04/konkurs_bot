@@ -6,4 +6,3 @@ from . import add_channel
 from . import delete_channel
 from . import back_buttons
 from . import channels
-from . import add_movie
