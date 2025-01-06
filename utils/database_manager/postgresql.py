@@ -4,7 +4,6 @@ from asyncpg import Connection
 from asyncpg.pool import Pool
 from data import config
 
-
 class Database:
     def __init__(self):
         self.pool: Union[Pool, None] = None
@@ -55,13 +54,14 @@ class Database:
 
     async def channels_table(self):
         sql = """
-        CREATE TABLE IF NOT EXISTS Channels (
-            id SERIAL PRIMARY KEY,
-            channel_name VARCHAR(255) NULL,
-            channel_id BIGINT NOT NULL UNIQUE,
-            channel_members_count INT NOT NULL
-        );
-        """
+           CREATE TABLE IF NOT EXISTS Channels (
+           id SERIAL PRIMARY KEY,
+           channel_name VARCHAR(255) NULL,
+           channel_id BIGINT NOT NULL UNIQUE,
+           invite_link TEXT,
+           channel_members_count INT NOT NULL
+           );
+           """
         await self.execute(sql, execute=True)
 
     async def referrals_table(self):
@@ -91,12 +91,9 @@ class Database:
         """
         return await self.execute(sql, fullname, telegram_id, language, fetchrow=True)
 
-    async def add_channel(self, channel_name, channel_id, channel_members_count):
-        sql = """
-        INSERT INTO Channels (channel_name, channel_id, channel_members_count)
-        VALUES ($1, $2, $3) RETURNING *;
-        """
-        return await self.execute(sql, channel_name, int(channel_id), int(channel_members_count), fetchrow=True)
+    async def add_channel(self, channel_name, channel_id,invite_link,channel_members_count):
+        sql = "INSERT INTO Channels (channel_name, channel_id,invite_link,channel_members_count) VALUES($1, $2, $3, $4) returning *"
+        return await self.execute(sql, channel_name,int(channel_id),invite_link,int(channel_members_count),fetchrow=True)
 
     async def add_referral(self, referrer_id, referred_id):
         # Referrer mavjudligini tekshiramiz

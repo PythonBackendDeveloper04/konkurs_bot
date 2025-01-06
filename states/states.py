@@ -13,7 +13,7 @@ class VideoAdvertising(StatesGroup):
     url = State()
     check = State()
 
-class AddChannelState(StatesGroup):
+class AddChannel(StatesGroup):
     channel_id = State()
     invite_link = State()
     check = State()

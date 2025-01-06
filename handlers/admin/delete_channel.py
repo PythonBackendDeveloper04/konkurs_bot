@@ -3,7 +3,7 @@ from aiogram import types,F
 from filters import *
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from keyboards.default.buttons import admin_buttons
+from keyboards.default.buttons import admin_menu
 from aiogram.filters.callback_data import CallbackData
 class CheckDeleteChannel(CallbackData,prefix='ikb4'):
     channel_id:str
@@ -14,21 +14,26 @@ async def delete_channel(message:types.Message,state:FSMContext):
     btn = InlineKeyboardBuilder()
     for channel in channels:
         try:
-            kanal = await bot.get_chat(chat_id=channel[2])
-            title = kanal.title
-            btn.button(text=f"{title} | ❌", callback_data=CheckDeleteChannel(channel_id=str(channel[2])))
+            # kanal ma'lumotlarini olish
+            channel_info = await bot.get_chat(chat_id=channel[2])
+            # kanal nomi
+            title = channel_info.title
+            # tugma qo'shish
+            btn.button(text=title, callback_data=CheckDeleteChannel(channel_id=str(channel[2])))
             btn.adjust(1)
         except Exception as e:
             print(e)
-    await message.answer("O'chirmoqchi bo'lgan kanaliz ustiga bosing!", reply_markup=btn.as_markup())
+    await message.answer("<b>O'chirmoqchi bo'lgan kanalingizni tanlang:</b>", reply_markup=btn.as_markup())
 
-@dp.callback_query(CheckDeleteChannel.filter(),IsBotAdmin())
+@dp.callback_query(CheckDeleteChannel.filter())
 async def get(call:types.CallbackQuery,callback_data:CheckDeleteChannel,state:FSMContext):
+    # kanal ID'sini callback ma'lumotlaridan olish
     channel_id = callback_data.channel_id
     try:
+        # kanalni ma'lumotlar bazasidan o'chirish
         await db.delete_channel(channel_id=channel_id)
     except Exception as e:
         print(e)
     await call.answer("Kanal o'chirildi!",show_alert=True)
-    await call.message.answer("👨‍💻 Admin panel!", reply_markup=admin_buttons())
+    await call.message.answer("👨‍💻 Admin panel!", reply_markup=admin_menu())
     await call.message.delete()

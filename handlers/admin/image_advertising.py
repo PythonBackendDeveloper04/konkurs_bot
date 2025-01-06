@@ -1,25 +1,25 @@
 from loader import dp,bot,db
-from aiogram import types,F,html
+from aiogram import types,F
 from aiogram.fsm.context import FSMContext
 from keyboards.default.buttons import *
-from keyboards.inline.buttons import *
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 from states.states import *
 from filters import *
 from utils.misc.link_checker import check_url
-from keyboards.default.buttons import admin_buttons
+from keyboards.default.buttons import admin_menu
 
 @dp.message(F.text=='📸 Rasm',IsBotAdmin(),IsPrivate())
-async def get_format_text(message:types.Message,state:FSMContext):
-    await message.answer(html.bold("Post rasmini yuboring!"),reply_markup=back_button())
+async def request_post_image(message:types.Message,state:FSMContext):
+    await message.answer("Post rasmini yuboring!",reply_markup=back_button())
     await state.set_state(ImageAdvertising.image)
 
-@dp.message(F.text=='◀️ Orqaga',ImageAdvertising.image,IsBotAdmin(),IsPrivate())
+@dp.message(F.text=='◀️ Orqaga',ImageAdvertising.image)
 async def navigate_back(message:types.Message,state:FSMContext):
-    await message.answer("👨‍💻 Admin panel!", reply_markup=admin_buttons())
+    await message.answer("👨‍💻 Admin panel!", reply_markup=admin_menu())
     await state.clear()
 
-@dp.message(ImageAdvertising.image,IsBotAdmin())
-async def get_text(message:types.Message,state:FSMContext):
+@dp.message(ImageAdvertising.image)
+async def get_post_image(message:types.Message,state:FSMContext):
     if message.content_type=='photo':
         await message.answer_photo(photo=message.photo[-1].file_id,caption=message.caption)
         await state.update_data({
@@ -36,27 +36,27 @@ async def get_text(message:types.Message,state:FSMContext):
         await message.answer(text,reply_markup=get_before_url())
         await state.set_state(ImageAdvertising.url)
     else:
-        await message.answer(html.bold("Post rasmini yuboring!"))
+        await message.answer("Post rasmini yuboring!")
         await state.set_state(ImageAdvertising.image)
 
-@dp.message(F.text=='⏺ Bekor qilish',ImageAdvertising.url,IsBotAdmin())
+@dp.message(F.text=='⏺ Bekor qilish',ImageAdvertising.url)
 async def cancel(message:types.Message,state:FSMContext):
-    await message.answer("👨‍💻 Admin panel!", reply_markup=admin_buttons())
+    await message.answer("👨‍💻 Admin panel!", reply_markup=admin_menu())
     await state.clear()
 
-@dp.message(F.text=='⏺ Bekor qilish',ImageAdvertising.check,IsBotAdmin())
+@dp.message(F.text=='⏺ Bekor qilish',ImageAdvertising.check)
 async def cancel(message:types.Message,state:FSMContext):
-    await message.answer("👨‍💻 Admin panel!", reply_markup=admin_buttons())
+    await message.answer("👨‍💻 Admin panel!", reply_markup=admin_menu())
     await state.clear()
 
-@dp.message(F.text=='🆗 Kerakmas',ImageAdvertising.url,IsBotAdmin())
-async def back(message:types.Message,state:FSMContext):
+@dp.message(F.text=='🆗 Kerakmas',ImageAdvertising.url)
+async def skip(message:types.Message,state:FSMContext):
     data = await state.get_data()
     await message.answer_photo(photo=data['photo'], caption=data['caption'])
     await message.answer("Agar tayyor bo'lsa '📤 Yuborish' tugmasini bosing!", reply_markup=send_button())
     await state.set_state(ImageAdvertising.check)
 
-@dp.message(ImageAdvertising.url,IsBotAdmin())
+@dp.message(ImageAdvertising.url)
 async def get_url(message:types.Message,state:FSMContext):
     if message.content_type=='text':
         urls = check_url(text=message.text)
@@ -68,11 +68,11 @@ async def get_url(message:types.Message,state:FSMContext):
         links = urls.splitlines()
         btn = InlineKeyboardBuilder()
         for link in links:
-            manzil = link[link.rfind('+') + 1:]
-            manzil = manzil.strip()
+            url = link[link.rfind('+') + 1:]
+            url = url.strip()
             text = link[:link.rfind('+')]
             text = text.strip()
-            btn.button(text=text, url=manzil)
+            btn.button(text=text, url=url)
         btn.adjust(1)
         await message.answer_photo(photo=data['photo'], caption=data['caption'], reply_markup=btn.as_markup())
         await message.answer("Agar tayyor bo'lsa '📤 Yuborish' tugmasini bosing!", reply_markup=send_button())
@@ -86,23 +86,22 @@ async def get_url(message:types.Message,state:FSMContext):
               "Format:\n"\
               "[Birinchi matn+birinchi havola]\n"\
               "[Ikkinchi matn+ikkinchi havola]"
-
         await message.answer(text, reply_markup=get_before_url())
         await state.set_state(ImageAdvertising.url)
 
-@dp.message(F.text=='📤 Yuborish',IsBotAdmin(),ImageAdvertising.check)
-async def send_add(message:types.Message,state:FSMContext):
+@dp.message(F.text=='📤 Yuborish',ImageAdvertising.check)
+async def send_post(message:types.Message,state:FSMContext):
     data = await state.get_data()
     users = await db.select_all_users()
     if data.get('buttons', None):
         links = data['buttons'].splitlines()
         btn = InlineKeyboardBuilder()
         for link in links:
-            manzil = link[link.rfind('+') + 1:]
-            manzil = manzil.strip()
+            url = link[link.rfind('+') + 1:]
+            url = url.strip()
             text = link[:link.rfind('+')]
             text = text.strip()
-            btn.button(text=text, url=manzil)
+            btn.button(text=text, url=url)
         btn.adjust(1)
         counter = 0
         for user in users:
@@ -112,7 +111,7 @@ async def send_add(message:types.Message,state:FSMContext):
                 counter += 1
             except Exception as e:
                 print(e)
-        await message.answer(f"{counter} kishiga xabar yuborildi!", reply_markup=admin_buttons())
+        await message.answer(f"{counter} kishiga xabar yuborildi!", reply_markup=admin_menu())
     else:
         counter = 0
         for user in users:
@@ -121,5 +120,5 @@ async def send_add(message:types.Message,state:FSMContext):
                 counter += 1
             except Exception as e:
                 print(e)
-        await message.answer(f"{counter} kishiga xabar yuborildi!", reply_markup=admin_buttons())
+        await message.answer(f"{counter} kishiga xabar yuborildi!", reply_markup=admin_menu())
     await state.clear()

@@ -2,11 +2,11 @@ from loader import bot,dp,db
 from aiogram import types,F,html
 from aiogram.fsm.context import FSMContext
 from keyboards.default.buttons import *
-from keyboards.inline.buttons import *
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 from states.states import *
 from filters import *
 from utils.misc.link_checker import check_url
-from keyboards.default.buttons import admin_buttons
+from keyboards.default.buttons import admin_menu
 
 @dp.message(F.text=='📹 Video',IsBotAdmin(),IsPrivate())
 async def get_format_text(message:types.Message,state:FSMContext):
@@ -15,7 +15,7 @@ async def get_format_text(message:types.Message,state:FSMContext):
 
 @dp.message(F.text=='◀️ Orqaga',VideoAdvertising.video,IsBotAdmin())
 async def back(message:types.Message,state:FSMContext):
-    await message.answer("👨‍💻 Admin panel!", reply_markup=admin_buttons())
+    await message.answer("👨‍💻 Admin panel!", reply_markup=admin_menu())
     await state.clear()
 
 @dp.message(VideoAdvertising.video,IsBotAdmin())
@@ -41,12 +41,12 @@ async def get_text(message:types.Message,state:FSMContext):
 
 @dp.message(F.text=='⏺ Bekor qilish',VideoAdvertising.url,IsBotAdmin())
 async def back(message:types.Message,state:FSMContext):
-    await message.answer("👨‍💻 Admin panel!", reply_markup=admin_buttons())
+    await message.answer("👨‍💻 Admin panel!", reply_markup=admin_menu())
     await state.clear()
 
 @dp.message(F.text=='⏺ Bekor qilish',VideoAdvertising.check,IsBotAdmin())
 async def back(message:types.Message,state:FSMContext):
-    await message.answer("👨‍💻 Admin panel!", reply_markup=admin_buttons())
+    await message.answer("👨‍💻 Admin panel!", reply_markup=admin_menu())
     await state.clear()
 
 @dp.message(F.text=='🆗 Kerakmas',VideoAdvertising.url,IsBotAdmin())
@@ -112,7 +112,7 @@ async def send_add(message:types.Message,state:FSMContext):
                 counter += 1
             except Exception as e:
                 print(e)
-        await message.answer(f"{counter} kishiga xabar yuborildi!", reply_markup=admin_buttons())
+        await message.answer(f"{counter} kishiga xabar yuborildi!", reply_markup=admin_menu())
     else:
         counter = 0
         for user in users:
@@ -121,5 +121,5 @@ async def send_add(message:types.Message,state:FSMContext):
                 counter += 1
             except Exception as e:
                 print(e)
-        await message.answer(f"{counter} kishiga xabar yuborildi!", reply_markup=admin_buttons())
+        await message.answer(f"{counter} kishiga xabar yuborildi!", reply_markup=admin_menu())
     await state.clear()

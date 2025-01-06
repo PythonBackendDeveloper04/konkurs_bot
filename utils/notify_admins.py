@@ -1,5 +1,5 @@
-from loader import bot
 from data.config import ADMINS
+from loader import bot
 async def start():
     for i in ADMINS:
         try:
