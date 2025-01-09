@@ -5,7 +5,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from keyboards.default.buttons import admin_menu
 from aiogram.filters.callback_data import CallbackData
-class CheckDeleteChannel(CallbackData,prefix='ikb4'):
+class CheckDeleteChannel(CallbackData,prefix='ikb34'):
     channel_id:str
 
 @dp.message(F.text=="❌ Kanal o'chirish",IsBotAdmin(),IsPrivate())
