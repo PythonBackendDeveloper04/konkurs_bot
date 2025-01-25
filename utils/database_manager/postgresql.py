@@ -45,6 +45,7 @@ class Database:
                 id SERIAL PRIMARY KEY,
                 fullname VARCHAR(255) NULL,
                 telegram_id BIGINT NOT NULL UNIQUE,
+                phone TEXT UNIQUE,
                 language VARCHAR(255) DEFAULT 'uz',
                 score INT DEFAULT 0,
                 created_at TIMESTAMP DEFAULT NOW()
@@ -82,14 +83,14 @@ class Database:
         sql += " AND ".join([f"{item} = ${num}" for num, item in enumerate(parameters.keys(), start=1)])
         return sql, tuple(parameters.values())
 
-    async def add_user(self, fullname, telegram_id, language: str = "uz"):
+    async def add_user(self, fullname, telegram_id, phone, language: str = "uz"):
         sql = """
-        INSERT INTO Users (fullname, telegram_id, language)
-        VALUES ($1, $2, $3)
+        INSERT INTO Users (fullname, telegram_id, phone, language)
+        VALUES ($1, $2, $3, $4)
         ON CONFLICT (telegram_id) DO NOTHING
         RETURNING *;
         """
-        return await self.execute(sql, fullname, telegram_id, language, fetchrow=True)
+        return await self.execute(sql, fullname, telegram_id, phone, language, fetchrow=True)
 
     async def add_channel(self, channel_name, channel_id,invite_link,channel_members_count):
         sql = "INSERT INTO Channels (channel_name, channel_id,invite_link,channel_members_count) VALUES($1, $2, $3, $4) returning *"
@@ -125,6 +126,13 @@ class Database:
         """
         return await self.execute(sql, int(channel_id), fetchrow=True)
 
+    async def invite_link(self, channel_id):
+        sql = """
+        SELECT invite_link FROM Channels WHERE channel_id=$1
+        """
+        result = await self.execute(sql, int(channel_id), fetchrow=True)
+        return result['invite_link'] if result else None
+
     async def select_all_users(self):
         sql = "SELECT * FROM Users;"
         return await self.execute(sql, fetch=True)
@@ -141,11 +149,11 @@ class Database:
         sql = "SELECT COUNT(*) FROM Users;"
         return await self.execute(sql, fetchval=True)
 
-    async def update_user_language(self, language, telegram_id):
+    async def update_user(self, phone, telegram_id):
         sql = """
-        UPDATE Users SET language = $1 WHERE telegram_id = $2;
+        UPDATE Users SET phone = $1 WHERE telegram_id = $2;
         """
-        return await self.execute(sql, language, telegram_id, execute=True)
+        return await self.execute(sql, phone, telegram_id, execute=True)
 
     async def is_referred_by(self, referrer_id, referred_id):
         referrer_id = int(referrer_id)  # Telegram ID ni int ga aylantirish
@@ -208,4 +216,3 @@ class Database:
         LIMIT $1;
         """
         return await self.execute(sql, limit, fetch=True)
-

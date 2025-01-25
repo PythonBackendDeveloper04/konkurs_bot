@@ -11,9 +11,9 @@ async def main():
     try:
         await bot.delete_webhook(drop_pending_updates=True)
         await bot.set_my_commands(commands=commands,scope=BotCommandScopeAllPrivateChats(type='all_private_chats'))
-        dp.message.middleware(UserCheckMiddleware())
         dp.startup.register(start)
         dp.shutdown.register(shutdown)
+        dp.message.middleware(UserCheckMiddleware())
         try:
             await db.connection()
             await db.users_table()
@@ -25,5 +25,11 @@ async def main():
     finally:
         await bot.session.close()
 if __name__=='__main__':
-    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+    logging.basicConfig(level=logging.INFO,
+                        format="%(asctime)s - %(levelname)s - %(message)s",  # Log formati
+                        handlers=[
+                            logging.FileHandler("bot_logs.log", mode='a', encoding='utf-8'),  # Faylga yozish
+                            logging.StreamHandler(sys.stdout)  # Konsolga yozish
+                        ]
+                        )
     asyncio.run(main())

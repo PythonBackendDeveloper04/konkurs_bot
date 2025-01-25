@@ -1,8 +1,15 @@
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 from aiogram.types import ReplyKeyboardMarkup,KeyboardButton
 
+def send_phone_number():
+    btn = ReplyKeyboardBuilder()
+    btn.button(text="📱 Telefon raqamni ulashish",request_contact=True)
+    btn.adjust(1)
+    return btn.as_markup(resize_keyboard=True,one_time_keyboard=True)
 def admin_menu():
     btn = ReplyKeyboardBuilder()
+    btn.button(text="Top 10 users")
+    btn.button(text="ID orqali qidirish")
     btn.button(text="🗣 Reklama yuborish")
     btn.button(text="📊 Obunachilar soni")
     btn.button(text="📢 Kanal qo'shish")
@@ -11,6 +18,7 @@ def admin_menu():
     btn.adjust(2)
     return btn.as_markup(resize_keyboard=True,input_placeholder="Kerakli bo'limni tanlang...",
                          one_time_keyboard=True)
+
 def add_type():
     btn = ReplyKeyboardBuilder()
     btn.button(text="✏️ Matn")
@@ -41,11 +49,19 @@ def send_button():
     return btn.as_markup(resize_keyboard=True)
 
 def main_menu():
+    # btn = ReplyKeyboardMarkup(
+    #     keyboard=[
+    #         [KeyboardButton(text="Konkursda qatnashish 🔴")],  # 1 ta tugma alohida qatorda
+    #         [KeyboardButton(text="🎁 Sovg'alar"), KeyboardButton(text="👤 Profil")],  # 2 ta tugma bitta qatorda
+    #         [KeyboardButton(text="📊 Reyting"), KeyboardButton(text="📞 Admin")]  # 2 ta tugma bitta qatorda
+    #     ],
+    #     resize_keyboard=True
+    # )
     btn = ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="Konkursda qatnashish 🔴")],  # 1 ta tugma alohida qatorda
-            [KeyboardButton(text="🎁 Sovg'alar"), KeyboardButton(text="👤 Profil")],  # 2 ta tugma bitta qatorda
-            [KeyboardButton(text="📊 Reyting"), KeyboardButton(text="📞 Admin")]  # 2 ta tugma bitta qatorda
+            [KeyboardButton(text="🎁 Konkursda qatnashish")],
+            [KeyboardButton(text="👤 Profil")],
+            [KeyboardButton(text="📊 Reyting"), KeyboardButton(text="📞 Admin")]
         ],
         resize_keyboard=True
     )
