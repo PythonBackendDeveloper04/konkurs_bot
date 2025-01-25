@@ -1,4 +1,4 @@
-aiogram==3.4.0
+aiogram==3.17.0
 environs
 psycopg2-binary
 asyncpg
