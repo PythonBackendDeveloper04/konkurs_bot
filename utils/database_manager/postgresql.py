@@ -3,6 +3,7 @@ import asyncpg
 from asyncpg import Connection
 from asyncpg.pool import Pool
 from data import config
+import pandas as pd
 
 class Database:
     def __init__(self):
@@ -46,9 +47,10 @@ class Database:
                 fullname VARCHAR(255) NULL,
                 telegram_id BIGINT NOT NULL UNIQUE,
                 phone TEXT UNIQUE,
+                username TEXT,
                 language VARCHAR(255) DEFAULT 'uz',
                 score INT DEFAULT 0,
-                created_at TIMESTAMP DEFAULT NOW()
+                time TIMESTAMP DEFAULT NOW()
             );
             """
         await self.execute(sql, execute=True)
@@ -83,14 +85,14 @@ class Database:
         sql += " AND ".join([f"{item} = ${num}" for num, item in enumerate(parameters.keys(), start=1)])
         return sql, tuple(parameters.values())
 
-    async def add_user(self, fullname, telegram_id, phone, language: str = "uz"):
+    async def add_user(self, fullname, telegram_id, phone, username,language: str = "uz"):
         sql = """
-        INSERT INTO Users (fullname, telegram_id, phone, language)
-        VALUES ($1, $2, $3, $4)
+        INSERT INTO Users (fullname, telegram_id, phone,username, language)
+        VALUES ($1, $2, $3, $4,$5)
         ON CONFLICT (telegram_id) DO NOTHING
         RETURNING *;
         """
-        return await self.execute(sql, fullname, telegram_id, phone, language, fetchrow=True)
+        return await self.execute(sql, fullname, telegram_id, phone, username, language, fetchrow=True)
 
     async def add_channel(self, channel_name, channel_id,invite_link,channel_members_count):
         sql = "INSERT INTO Channels (channel_name, channel_id,invite_link,channel_members_count) VALUES($1, $2, $3, $4) returning *"
@@ -143,7 +145,7 @@ class Database:
 
     async def select_user(self, telegram_id):
         sql = "SELECT * FROM Users WHERE telegram_id = $1;"
-        return await self.execute(sql, telegram_id, fetchrow=True)
+        return await self.execute(sql, int(telegram_id), fetchrow=True)
 
     async def count_users(self):
         sql = "SELECT COUNT(*) FROM Users;"
@@ -216,3 +218,14 @@ class Database:
         LIMIT $1;
         """
         return await self.execute(sql, limit, fetch=True)
+
+    async def export_to_excel(self, table_name: str, file_name: str):
+        sql = f"SELECT * FROM {table_name};"
+        data = await self.execute(sql, fetch=True)
+
+        if data:
+            df = pd.DataFrame(data)
+            df.to_excel(file_name, index=False)
+            print(f"{table_name} jadvali {file_name} fayliga eksport qilindi.")
+        else:
+            print(f"{table_name} jadvali bo‘sh yoki mavjud emas.")

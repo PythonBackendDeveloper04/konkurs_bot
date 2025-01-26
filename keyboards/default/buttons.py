@@ -8,8 +8,7 @@ def send_phone_number():
     return btn.as_markup(resize_keyboard=True,one_time_keyboard=True)
 def admin_menu():
     btn = ReplyKeyboardBuilder()
-    btn.button(text="Top 10 users")
-    btn.button(text="ID orqali qidirish")
+    btn.button(text="🆔 ID orqali qidirish")
     btn.button(text="🗣 Reklama yuborish")
     btn.button(text="📊 Obunachilar soni")
     btn.button(text="📢 Kanal qo'shish")
@@ -60,8 +59,7 @@ def main_menu():
     btn = ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text="🎁 Konkursda qatnashish")],
-            [KeyboardButton(text="👤 Profil")],
-            [KeyboardButton(text="📊 Reyting"), KeyboardButton(text="📞 Admin")]
+            [KeyboardButton(text="👤 Profil"), KeyboardButton(text="📞 Admin")]
         ],
         resize_keyboard=True
     )

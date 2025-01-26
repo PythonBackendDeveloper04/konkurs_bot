@@ -20,3 +20,6 @@ class AddChannel(StatesGroup):
 
 class Comment(StatesGroup):
     message = State()
+
+class SearchUser(StatesGroup):
+    id = State()

@@ -51,7 +51,7 @@ async def start(message: types.Message, state: FSMContext):
             if user:
                 await message.answer("Menyudan bo'lim tanlang:", reply_markup=main_menu())
             else:
-                await db.add_user(fullname=message.from_user.first_name,telegram_id=message.from_user.id,phone=None)
+                await db.add_user(fullname=message.from_user.first_name,telegram_id=message.from_user.id,phone=None,username=message.from_user.username)
                 await message.answer("Telefon raqamingizni yuboring:", reply_markup=send_phone_number())
                 ref_user_id = None
                 print(args)
