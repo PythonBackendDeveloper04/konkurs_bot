@@ -94,7 +94,7 @@ async def user_info(message:types.Message,state:FSMContext):
     await state.set_state(SearchUser.id)
 
 @dp.message(F.text,SearchUser.id)
-async def search(message:types.Message):
+async def search(message:types.Message,state:FSMContext):
     user_id = message.text
     user = await db.select_user(user_id)
 
@@ -123,17 +123,18 @@ async def search(message:types.Message):
                 unsubscribed_channels += f"❌ {title}\n"  # Obuna bo'lmaganlar
 
         # Foydalanuvchiga natijani yuborish
-        result_message = f"<b>ID:</b> {user_id}\n<b>Ismi: </b>{user[1]}\n<b>Telefon: </b>+{user[3]}\n<b>Username: </b>{user[4]}\n<b>Ro'yhatgan o'tgan vaqti: </b>{time}"
+        result_message = f"<b>ID:</b> {user_id}\n<b>Ismi: </b>{user[1]}\n<b>Telefon: </b>+{user[3]}\n<b>Username: </b>@{user[4]}\n<b>Ro'yhatgan o'tgan vaqti: </b>{time}"
         if subscribed_channels:
             result_message += "<b>Obuna bo'lgan kanallar:</b>\n" + subscribed_channels + "\n"
         if unsubscribed_channels:
             result_message += "<b>Obuna bo'lmagan kanallar:</b>\n" + unsubscribed_channels
 
         await message.answer(result_message)
-
+        await state.clear()
     except Exception as e:
         print(f"Xatolik: {e}")
         await message.answer("Xatolik yuz berdi.")
+        await state.clear()
 
 @dp.message(F.text=='🗣 Reklama yuborish',IsBotAdmin(),IsPrivate())
 async def get_add_type(message:types.Message):
