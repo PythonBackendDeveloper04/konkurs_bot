@@ -3,7 +3,7 @@ from aiogram import types,F
 from filters import *
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from keyboards.default.buttons import admin_menu
+from keyboards.reply import admin_menu
 from aiogram.filters.callback_data import CallbackData
 class CheckDeleteChannel(CallbackData,prefix='ikb34'):
     channel_id:str

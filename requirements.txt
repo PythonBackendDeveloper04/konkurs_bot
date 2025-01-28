@@ -3,3 +3,6 @@ environs
 psycopg2-binary
 asyncpg
 requests
+validators
+pandas
+openpyxl

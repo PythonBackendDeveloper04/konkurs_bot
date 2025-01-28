@@ -1,12 +1,12 @@
 from loader import dp,bot,db
 from aiogram import types,F
 from aiogram.fsm.context import FSMContext
-from keyboards.default.buttons import *
+from keyboards.reply import *
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from states.states import *
 from filters import *
-from utils.misc.link_checker import check_url
-from keyboards.default.buttons import admin_menu
+from utils.link_checker import check_url
+from keyboards.reply import admin_menu
 
 @dp.message(F.text=='📸 Rasm',IsBotAdmin(),IsPrivate())
 async def request_post_image(message:types.Message,state:FSMContext):

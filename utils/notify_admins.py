@@ -1,4 +1,4 @@
-from data.config import ADMINS
+from config import ADMINS
 from loader import bot
 async def start():
     for i in ADMINS:

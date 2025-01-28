@@ -2,7 +2,7 @@ from loader import bot,dp,db
 import handlers,middlewares
 from utils.notify_admins import start,shutdown
 from aiogram.types.bot_command_scope_all_private_chats import BotCommandScopeAllPrivateChats
-from utils.set_botcommands import commands
+from utils.bot_commands import commands
 from middlewares.subscription_middleware import UserCheckMiddleware
 import logging
 import sys

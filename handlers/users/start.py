@@ -1,84 +1,92 @@
 from loader import bot, dp, db
-from aiogram.filters import CommandStart, Command
+from aiogram.filters import CommandStart
 from aiogram.filters.callback_data import CallbackData
 from aiogram import types, F
-from keyboards.default.buttons import main_menu, back_button,send_phone_number
+from keyboards.reply import main_menu, back_button,send_phone_number
 from aiogram.utils.keyboard import InlineKeyboardBuilder, InlineKeyboardButton
-from utils.misc.subscription_checker import check
+from utils.subscription_checker import check
 from aiogram.fsm.context import FSMContext
 from states.states import Comment
-from data.config import ADMINS
+from config import ADMINS
 
-class CheckSubs(CallbackData, prefix='ikb3'):
+class CheckSubsciptionCallbackData(CallbackData, prefix='ikb3'):
     check: bool
 
 # Referal havola yasovchi funksiya
-def get_referal_link(user_id):
+def generate_referal_link(user_id):
     return f"https://t.me/ZudlikYangilikKonkursBot?start={user_id}"
 
 
 @dp.message(CommandStart())
 async def start(message: types.Message, state: FSMContext):
     args = message.text.split(' ')[1:]
-    print(args)
     try:
-        # Obuna tugmasi va holatini saqlash
-        btn = InlineKeyboardBuilder()
         channels = await db.select_all_channels()
-        final_status = True
+        channel_buttons = InlineKeyboardBuilder()
+        all_channels_subscribed = True
 
         for channel in channels:
-            status = await check(user_id=message.from_user.id, channel=channel[2])
-            if not status:
-                final_status = False
+            is_subscripbed = True
+            try:
+                # obuna holatini tekshirish
+                is_subscripbed = await check(user_id=message.from_user.id,
+                                     channel=channel[2])
+            except Exception as e:
+                print(e)
+                is_subscripbed = False
+            all_channels_subscribed *= is_subscripbed
+            try:
                 channel_info = await bot.get_chat(channel[2])
-                invite_link = await channel_info.export_invite_link()
-                btn.row(InlineKeyboardButton(text=f"➕ {channel_info.title}", url=invite_link))
+                invite_link = await db.invite_link(channel.id)
+                print(f"invite_link:{invite_link}")
+                if not is_subscripbed:
+                    channel_buttons.row(InlineKeyboardButton(text=f"➕ {channel.title}", url=invite_link))
+            except Exception as e:
+                print(e)
 
-        btn.button(text="✅ Tasdiqlash", callback_data=CheckSubs(check=True))
-        btn.adjust(1)
+        channel_buttons.button(text="✅ Tasdiqlash", callback_data=CheckSubsciptionCallbackData(check=True))
+        channel_buttons.adjust(1)
 
-        if not final_status:
-            # Pending event saqlanadi (kanallarga obuna bo'lmaganlar uchun)
+        if not all_channels_subscribed:
+            # obuna bo'lmaganlar uchun holatni saqlash
             await state.update_data(pending_event=message)
             await message.answer(
                 text="Iltimos bot to'liq ishlashi uchun quyidagi kanallarga obuna bo'ling:",
-                reply_markup=btn.as_markup(row_width=1),
+                reply_markup=channel_buttons.as_markup(row_width=1),
             )
         else:
-            # Agar barcha kanallarga obuna bo'lgan bo‘lsa
             user = await db.select_user(message.from_user.id)
             if user:
                 await message.answer("Menyudan bo'lim tanlang:", reply_markup=main_menu())
             else:
                 await db.add_user(fullname=message.from_user.first_name,telegram_id=message.from_user.id,phone=None,username=message.from_user.username)
                 await message.answer("Telefon raqamingizni yuboring:", reply_markup=send_phone_number())
-                ref_user_id = None
-                print(args)
+
+                referrer_user_id = None
                 if args:
                     ref_user_id = args[0]
                     print(f"Referal user ID: {ref_user_id}")
 
                 # foydalanuvchi o'zini referal qilib ololmasligi tekshiriladi
-                if ref_user_id == str(message.from_user.id):
+                if referrer_user_id == str(message.from_user.id):
                     print("Foydalanuvchi o'zini referal qilib ololmaydi.")
                     return
 
                 # foydalanuvchi allaqachon referal bo'lsa, uni tekshirish
-                if ref_user_id:
+                if referrer_user_id:
                     try:
                         # foydalanuvchi allaqachon referal bo'lganligini tekshirish
-                        if not await db.is_referred_by(ref_user_id, message.from_user.id):
+                        if not await db.is_referred_by(referrer_user_id, message.from_user.id):
                             # foydalanuvchi boshqa birovning referali emasligini tekshirish
                             referred_exists = await db.is_referred_by_anyone(message.from_user.id)
                             if not referred_exists:
                                 # referalga ball qo'shish
-                                await db.add_score(ref_user_id, 10)
+                                await db.add_score(referrer_user_id, 10)
                                 # referal jadvaliga qo'shish
-                                await db.mark_as_referred(ref_user_id, message.from_user.id)
+                                await db.mark_as_referred(referrer_user_id, message.from_user.id)
                                 # referal egasiga xabar yuborish
                                 await bot.send_message(
-                                    chat_id=ref_user_id,
+                                    chat_id=referrer_user_id,
                                     text=f"🎉 Yangi referal! Do'stingiz <b>{message.from_user.full_name}</b> sizning referal havolangiz orqali ro'yxatdan o'tdi va sizga 10 ball taqdim etildi!"
                                 )
                             else:
@@ -92,25 +100,29 @@ async def start(message: types.Message, state: FSMContext):
         print(f"Xato: {e}")
 
 
-@dp.callback_query(CheckSubs.filter())
+@dp.callback_query(CheckSubsciptionCallbackData.filter())
 async def check_subscription(call: types.CallbackQuery, state: FSMContext):
     await call.answer(cache_time=60)
-    state_data = await state.get_data()
-    pending_event = state_data.get("pending_event")
 
-    if pending_event:
+    # Davlatdan oldindan saqlangan eventni olish
+    state_data = await state.get_data()
+    pending_subscription_check = state_data.get("pending_event")
+
+    if pending_subscription_check:
         # Obunani tasdiqlash muvaffaqiyatli bo'lsa
-        await state.clear()  # Davlatni tozalash
+        await state.clear()  # Holatni tozalash
         await call.message.delete()
 
-        # Referal logikasini ishlatish
-        if isinstance(pending_event, types.Message):
-            await start(pending_event, state)  # Asosiy jarayonni qayta chaqirish
+        # Pending event bo'yicha jarayonni davom ettirish
+        if isinstance(pending_subscription_check, types.Message):
+            print("Pending event qayta ishlanmoqda...")
+            await start(pending_subscription_check, state)  # Asosiy jarayonni qayta chaqirish
     else:
-        await call.message.edit_text("Siz barcha kanallarga obuna bo'lgansiz!")  # Qo'shimcha javob
+        await call.message.edit_text("Siz barcha kanallarga obuna bo'lgansiz!")  # Tasdiqlovchi javob
+
 
 @dp.message(F.contact)
-async def get_phone_number(message:types.Message):
+async def request_phone_number(message:types.Message):
     try:
         if message.contact.user_id == message.from_user.id:
             print(message.contact.user_id)
@@ -125,8 +137,12 @@ async def get_phone_number(message:types.Message):
     except Exception as e:
         print(f"Xato: {e}")
 
+
+
+
+
 @dp.message(F.text=="🎁 Konkursda qatnashish")
-async def participate_in_contest(message:types.Message):
+async def send_contest_invitation(message:types.Message):
     text = """
 <b>Zudlik Yangilik telegram kanali konkursi</b>
 
@@ -134,7 +150,7 @@ async def participate_in_contest(message:types.Message):
 G'oliblikni qo'lga kiritish uchun ko'proq do'stlaringizni taklif qiling va ko'proq imkoniyatlarga ega bo'ling</i>
 
 {}
-    """.format(get_referal_link(message.from_user.id))
+    """.format(generate_referal_link(message.from_user.id))
     first_message = await message.answer(text=text)
     second_message = """⬆️ Yuqorida sizning linkingiz qo'shilgan taklifnoma!
 

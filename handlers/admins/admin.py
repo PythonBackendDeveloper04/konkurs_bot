@@ -1,20 +1,18 @@
 from datetime import datetime
 
 from aiogram.fsm.context import FSMContext
-from aiogram.types import InputFile
 from loader import bot,dp,db
 from aiogram.filters import Command
 from filters import IsBotAdmin,IsPrivate
 from aiogram import types,F
-from keyboards.default.buttons import admin_menu,add_type
-from aiogram.utils.keyboard import InlineKeyboardBuilder
+from keyboards.reply import admin_menu,add_type,back_button
 from aiogram.filters.callback_data import CallbackData
-from utils.misc.subscription_checker import check
+from utils.subscription_checker import check
 from states.states import SearchUser
 class UserInfo(CallbackData,prefix='ikb35'):
     user_id:str
 
-@dp.message(Command('admin'),IsBotAdmin(),IsPrivate())
+@dp.message(Command('admins'),IsBotAdmin(),IsPrivate())
 async def admin(message:types.Message):
     await message.answer("👨‍💻 Admin panel!",reply_markup=admin_menu())
 
@@ -90,11 +88,14 @@ async def log(message: types.Message):
 
 @dp.message(F.text=="🆔 ID orqali qidirish")
 async def user_info(message:types.Message,state:FSMContext):
-    await message.answer("Foydalanuvchi ID sini kiriting:")
+    await message.answer("Foydalanuvchi ID sini kiriting:",reply_markup=back_button())
     await state.set_state(SearchUser.id)
 
 @dp.message(F.text,SearchUser.id)
 async def search(message:types.Message,state:FSMContext):
+    if message.text == "◀️ Orqaga":
+        await message.answer("👨‍💻 Admin panel!", reply_markup=admin_menu())
+        await state.clear()
     user_id = message.text
     user = await db.select_user(user_id)
 

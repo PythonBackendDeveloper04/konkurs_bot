@@ -4,5 +4,5 @@ from . import image_advertising
 from . import video_advertising
 from . import delete_channel
 from . import back_buttons
-from . import channels
+from . import view_channels
 from . import add_channel

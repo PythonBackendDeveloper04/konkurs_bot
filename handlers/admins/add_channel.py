@@ -4,7 +4,7 @@ from aiogram import types, F
 from aiogram.fsm.context import FSMContext
 from states.states import AddChannel
 from aiogram.utils.keyboard import InlineKeyboardBuilder, InlineKeyboardButton
-from keyboards.default.buttons import back_button, admin_menu
+from keyboards.reply import back_button, admin_menu
 from aiogram.filters.callback_data import CallbackData
 
 
@@ -51,7 +51,7 @@ async def channel_id(message: types.Message, state: FSMContext):
                 await message.answer("Bu kanal emas. Kanal ID sini yuboring!", reply_markup=back_button())
         except Exception as e:
             print(e)
-            await message.answer("Iltimos botni kanalga admin qiling!", reply_markup=back_button())
+            await message.answer("Iltimos botni kanalga admins qiling!", reply_markup=back_button())
 
 @dp.message(F.text, AddChannel.invite_link)
 async def invite_link(message: types.Message, state: FSMContext):
@@ -100,7 +100,7 @@ async def confirm_channel(call: types.CallbackQuery, callback_data: CheckAddChan
         invite_link=invite_link
     )
 
-    # admin paneliga qaytish
+    # admins paneliga qaytish
     await call.message.answer("👨‍💻 Admin panel!", reply_markup=admin_menu())
     await call.message.delete()
     await state.clear()
