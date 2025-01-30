@@ -12,7 +12,7 @@ from states.states import SearchUser
 class UserInfo(CallbackData,prefix='ikb35'):
     user_id:str
 
-@dp.message(Command('admins'),IsBotAdmin(),IsPrivate())
+@dp.message(Command('admin'),IsBotAdmin(),IsPrivate())
 async def admin(message:types.Message):
     await message.answer("👨‍💻 Admin panel!",reply_markup=admin_menu())
 
@@ -96,46 +96,46 @@ async def search(message:types.Message,state:FSMContext):
     if message.text == "◀️ Orqaga":
         await message.answer("👨‍💻 Admin panel!", reply_markup=admin_menu())
         await state.clear()
-    user_id = message.text
-    user = await db.select_user(user_id)
+    else:
+        user_id = message.text
+        user = await db.select_user(user_id)
 
-    time = user[7]  # Ro‘yxatdan o‘tgan vaqti
+        time = user[7]  # Ro‘yxatdan o‘tgan vaqti
 
-    # Ro'yhatdan o'tgan vaqtni formatlash
-    time = datetime.strftime(time, "%Y-%m-%d %H:%M")
+        # Ro'yhatdan o'tgan vaqtni formatlash
+        time = datetime.strftime(time, "%Y-%m-%d %H:%M")
 
-    channels = await db.select_all_channels()  # Barcha kanallarni bazadan olish
-    final_status = True
-    subscribed_channels = ""  # Obuna bo'lgan kanallar ro'yxati
-    unsubscribed_channels = ""  # Obuna bo'lmagan kanallar ro'yxati
+        channels = await db.select_all_channels()  # Barcha kanallarni bazadan olish
+        final_status = True
+        subscribed_channels = ""  # Obuna bo'lgan kanallar ro'yxati
+        unsubscribed_channels = ""  # Obuna bo'lmagan kanallar ro'yxati
 
-    try:
-        for channel in channels:
-            channel_id = channel[2]
-            channel_info = await bot.get_chat(channel_id)
-            title = channel_info.title
+        try:
+            for channel in channels:
+                channel_id = channel[2]
+                channel_info = await bot.get_chat(channel_id)
+                title = channel_info.title
 
-            # Foydalanuvchi obuna holatini tekshirish
-            status = await check(user_id=user_id, channel=channel_id)
-            if status:
-                subscribed_channels += f"✅ {title}\n"  # Obuna bo'lganlar
-            else:
-                final_status = False
-                unsubscribed_channels += f"❌ {title}\n"  # Obuna bo'lmaganlar
+                # Foydalanuvchi obuna holatini tekshirish
+                status = await check(user_id=user_id, channel=channel_id)
+                if status:
+                    subscribed_channels += f"✅ {title}\n"  # Obuna bo'lganlar
+                else:
+                    final_status = False
+                    unsubscribed_channels += f"❌ {title}\n"  # Obuna bo'lmaganlar
 
-        # Foydalanuvchiga natijani yuborish
-        result_message = f"<b>ID:</b> {user_id}\n<b>Ismi: </b>{user[1]}\n<b>Telefon: </b>+{user[3]}\n<b>Username: </b>@{user[4]}\n<b>Ro'yhatgan o'tgan vaqti: </b>{time}"
-        if subscribed_channels:
-            result_message += "<b>Obuna bo'lgan kanallar:</b>\n" + subscribed_channels + "\n"
-        if unsubscribed_channels:
-            result_message += "<b>Obuna bo'lmagan kanallar:</b>\n" + unsubscribed_channels
+            # Foydalanuvchiga natijani yuborish
+            result_message = f"<b>Foydalanuvchi ma'lumotlari</b>\n\n<b>ID:</b> {user_id}\n<b>Ismi: </b>{user[1]}\n<b>Telefon: </b>+{user[3]}\n<b>Username: </b>@{user[4]}\n<b>Ro'yhatgan o'tgan vaqti: </b>{time}\n"
+            if subscribed_channels:
+                result_message += "<b>Obuna bo'lgan kanallar:</b>\n" + subscribed_channels + ""
+            if unsubscribed_channels:
+                result_message += "<b>Obuna bo'lmagan kanallar:</b>\n" + unsubscribed_channels
 
-        await message.answer(result_message)
-        await state.clear()
-    except Exception as e:
-        print(f"Xatolik: {e}")
-        await message.answer("Xatolik yuz berdi.")
-        await state.clear()
+            await message.answer(result_message)
+        except Exception as e:
+            print(f"Xatolik: {e}")
+            await message.answer("Xatolik yuz berdi.")
+            await state.clear()
 
 @dp.message(F.text=='🗣 Reklama yuborish',IsBotAdmin(),IsPrivate())
 async def get_add_type(message:types.Message):

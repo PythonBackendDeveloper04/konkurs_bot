@@ -23,3 +23,6 @@ class Comment(StatesGroup):
 
 class SearchUser(StatesGroup):
     id = State()
+
+class Registration(StatesGroup):
+    phone_number = State()

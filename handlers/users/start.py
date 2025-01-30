@@ -6,7 +6,7 @@ from keyboards.reply import main_menu, back_button,send_phone_number
 from aiogram.utils.keyboard import InlineKeyboardBuilder, InlineKeyboardButton
 from utils.subscription_checker import check
 from aiogram.fsm.context import FSMContext
-from states.states import Comment
+from states.states import Comment,Registration
 from config import ADMINS
 
 class CheckSubsciptionCallbackData(CallbackData, prefix='ikb3'):
@@ -37,10 +37,10 @@ async def start(message: types.Message, state: FSMContext):
             all_channels_subscribed *= is_subscripbed
             try:
                 channel_info = await bot.get_chat(channel[2])
-                invite_link = await db.invite_link(channel.id)
+                invite_link = await db.invite_link(channel_info.id)
                 print(f"invite_link:{invite_link}")
                 if not is_subscripbed:
-                    channel_buttons.row(InlineKeyboardButton(text=f"➕ {channel.title}", url=invite_link))
+                    channel_buttons.row(InlineKeyboardButton(text=f"➕ {channel_info.title}", url=invite_link))
             except Exception as e:
                 print(e)
 
@@ -61,11 +61,12 @@ async def start(message: types.Message, state: FSMContext):
             else:
                 await db.add_user(fullname=message.from_user.first_name,telegram_id=message.from_user.id,phone=None,username=message.from_user.username)
                 await message.answer("Telefon raqamingizni yuboring:", reply_markup=send_phone_number())
+                await state.set_state(Registration.phone_number)
 
                 referrer_user_id = None
                 if args:
-                    ref_user_id = args[0]
-                    print(f"Referal user ID: {ref_user_id}")
+                    referrer_user_id = args[0]
+                    print(f"Referal user ID: {referrer_user_id}")
 
                 # foydalanuvchi o'zini referal qilib ololmasligi tekshiriladi
                 if referrer_user_id == str(message.from_user.id):
@@ -121,8 +122,8 @@ async def check_subscription(call: types.CallbackQuery, state: FSMContext):
         await call.message.edit_text("Siz barcha kanallarga obuna bo'lgansiz!")  # Tasdiqlovchi javob
 
 
-@dp.message(F.contact)
-async def request_phone_number(message:types.Message):
+@dp.message(F.contact,Registration.phone_number)
+async def request_phone_number(message:types.Message,state:FSMContext):
     try:
         if message.contact.user_id == message.from_user.id:
             print(message.contact.user_id)
@@ -131,6 +132,7 @@ async def request_phone_number(message:types.Message):
             # Foydalanuvchini ma'lumotlar bazasiga qo'shish
             await db.update_user(phone=phone,telegram_id=message.from_user.id)
             await message.answer("<b>Quyidagi menyudan kerakli bo'limni tanlang:</b>", reply_markup=main_menu())
+            await state.clear()
         else:
             await message.answer("Iltimos o'zingizni raqamingizni yuboring!")
 
@@ -181,7 +183,7 @@ async def show_gifts(message:types.Message):
 async def show_profile(message:types.Message):
     score = await db.get_score(message.from_user.id)
     invited_friends_count = await db.friends_count(message.from_user.id)
-    await message.answer(f"<b>📊 Sizning ma'lumotlaringiz:</b>\n\n<b>Sizning ID:</b> {message.from_user.id}\n<b>Siz to'plagan ball:</b> {score}\n<b>Siz taklif qilgan do'stlar:</b> {invited_friends_count}")
+    await message.answer(f"<b>📊 Sizning ma'lumotlaringiz:</b>\n\n<b>Sizning ID:</b> <code>{message.from_user.id}</code>\n<b>Siz to'plagan ball:</b> {score}\n<b>Siz taklif qilgan do'stlar:</b> {invited_friends_count}")
 
 @dp.message(F.text=="📊 Reyting")
 async def show_leaderboard(message: types.Message):
