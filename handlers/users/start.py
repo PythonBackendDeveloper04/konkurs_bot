@@ -148,7 +148,7 @@ async def send_contest_invitation(message:types.Message):
     text = """
 <b>Zudlik Yangilik telegram kanali konkursi</b>
 
-<i>G'oliblar har hafta yakshanba kuni telegram va intagram kanallarimizda jonli efirda aniqlanadi!
+<i>G'oliblar har hafta yakshanba kuni telegram va instagram kanallarimizda jonli efirda aniqlanadi!
 G'oliblikni qo'lga kiritish uchun ko'proq do'stlaringizni taklif qiling va ko'proq imkoniyatlarga ega bo'ling</i>
 
 {}
